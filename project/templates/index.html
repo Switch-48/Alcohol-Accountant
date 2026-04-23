@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-lg">
+                <h2>Your BAC: <span id="bac">0.1337</span> &#x2030;</h2>
+                <canvas id="bacchart" width="100%"></canvas>
+                {% if prev_event != None %}
+                        {% include 'past_event_form.html' %}
+                {% endif %}
+            </div>
+            <div class="col-lg">
+                <h2>Input your consumed beverages here:</h2>
+                <ul class="list-group">
+                    {% for id, drink in drinklist %}
+                    <a class="list-group-item">
+                        <i class="material-icons">local_bar</i>
+                        {{ drink }}, {{ drink._volume//10 }} cl, {{ drink._percentage*100 }}%
+                        <span class="label label-default label-pill pull-xs-right">
+                            <button type="button" class="btn btn-raised btn-success mr-0" onclick="addDrink('{{id}}')">+ 1</button>
+                        </span>
+                    </a>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+    <script>
+        var ctx = document.getElementById("bacchart").getContext("2d");
+        var label = [];
+        var value = [{'x': 1, 'y':1}];
+
+        var originalController = Chart.controllers.line;
+        Chart.controllers.line = Chart.controllers.line.extend({
+            draw: function() {
+                originalController.prototype.draw.call(this, arguments);
+                drawLabels(this);
+            }
+        });
+
+        function drawLabels(t) {
+            ctx.save();
+            ctx.font = Chart.helpers.fontString(12, Chart.defaults.global.defaultFontStyle, Chart.defaults.global.defaultFontFamily);
+            ctx.fillStyle = 'red';
+            ctx.textBaseline = 'bottom';
+
+            var chartInstance = t.chart;
+            var datasets = chartInstance.config.data.datasets;
+            datasets.forEach(function(ds, index) {
+                var label = ds.label;
+                var meta = chartInstance.controller.getDatasetMeta(index);
+                var len = meta.data.length-1;
+                //console.log(ds, meta.data[len]._model);
+                if (len >= 0) {
+                    var xOffset = meta.data[0]._model.x + 10;
+                    var yOffset = meta.data[0]._model.y;
+                    ctx.fillText(label, xOffset, yOffset);
+                }
+            });
+            ctx.restore();
+        }
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: label,
+                datasets: [
+                    {
+                        label: '',
+                        data: value,
+                        lineTension: 0,
+                        backgroundColor: 'transparent',
+                        borderColor: '#007bff',
+                        borderWidth: 4,
+                        pointBackgroundColor: '#007bff',
+                        radius: 0,
+                    },
+                    {
+                        label: '',
+                        data: value,
+                        lineTension: 0,
+                        backgroundColor: 'transparent',
+                        borderColor: '#007bff',
+                        borderWidth: 4,
+                        borderDash: [5],
+                        pointBackgroundColor: '#007bff',
+                        radius: 0,
+                    },
+                    {
+                        label: 'Driving limit',
+                        data: [
+                            {x:0, y:0.5},
+                            {x:1, y:0.5},
+                        ],
+                        lineTension: 0,
+                        backgroundColor: 'transparent',
+                        borderColor: '#ff0005',
+                        borderWidth: 1,
+                        radius: 0,
+                    },
+                    {
+                        label: 'Arbitrary limit',
+                        data: [
+                            {x:0, y:2},
+                            {x:1, y:2},
+                        ],
+                        lineTension: 0,
+                        backgroundColor: 'transparent',
+                        borderColor: '#ff0005',
+                        borderWidth: 1,
+                        radius: 0,
+                    },
+                    {
+                        label: 'Lethal limit',
+                        data: [
+                            {x:0, y:4},
+                            {x:1, y:4},
+                        ],
+                        lineTension: 0,
+                        backgroundColor: 'transparent',
+                        borderColor: '#ff0005',
+                        borderWidth: 1,
+                        radius: 0,
+                    },
+                ]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            max: 0.5,
+                        }
+                    }]
+                },
+                legend: {
+                    display: false
+                }
+            }
+        });
+
+        function addDrink(drink) {
+            $.post('/api/add_drink', {'drink': drink}, function (data) {
+                updateValues();
+            });
+        }
+
+        function updateValues() {
+            $.get('/api/graph', function (data) {
+                myChart.data.labels = data.labels;
+                myChart.data.datasets[0].data = data.past_values;
+                myChart.data.datasets[1].data = data.future_values;
+                var firstX = data.labels[0];
+                var lastX = data.labels[data.labels.length-1];
+                for (var i = 2; i < myChart.data.datasets.length; i++) { // Update the begin and end coordinates of the warning lines
+                    var line = myChart.data.datasets[i];
+                    line.data[0].x = firstX;
+                    line.data[1].x = lastX;
+                }
+                var points = data.past_values.concat(data.future_values);
+                var maxValue = points.reduce((max, p) => p.y > max ? p.y : max, points[0].y);
+                myChart.options.scales.yAxes[0].ticks.max = Math.ceil(10*(maxValue + 0.1))/10;
+                myChart.update();
+            });
+            $.get('/api/bac', function (data) {
+                $('#bac').text(data);
+            })
+        }
+
+        window.setInterval(updateValues, 1000);
+        updateValues();
+    </script>
+{% endblock %}

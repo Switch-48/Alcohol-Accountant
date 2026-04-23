@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css" integrity="sha384-wXznGJNEXNG1NFsbm0ugrLFMQPWswR3lds2VeinahP8N0zJw9VWSopbjv2x7WCvX" crossorigin="anonymous">
+    <link rel="manifest" href="/static/manifest.json">
+    <title>Alcohol Accountant</title>
+</head>
+<body>
+<div class="bmd-layout-container bmd-drawer-f-l bmd-drawer-overlay-sm-down bmd-drawer-in-md-up">
+    <header class="bmd-layout-header">
+        <div class="navbar bg-info">
+            <button class="navbar-toggler d-md-none" type="button" data-toggle="drawer" data-target="#dw-s1">
+                <span class="sr-only">Toggle drawer</span>
+                <i class="material-icons">menu</i>
+            </button>
+            <ul class="nav navbar-nav">
+                <li class="nav-item">Alcohol Accountant</li>
+            </ul>
+        </div>
+    </header>
+    <div id="dw-s1" class="bmd-layout-drawer bg-faded">
+        <header>
+            <a class="navbar-brand">Alcohol Accountant</a>
+        </header>
+        <ul class="list-group">
+            <a class="list-group-item{% if request.path == '/' %} active{% endif %}" href="/"><i class="material-icons">local_bar</i>Main</a>
+            <a class="list-group-item{% if request.path == '/events' %} active{% endif %}" href="/events"><i class="material-icons">calendar_today</i>Past Events</a>
+            <a class="list-group-item{% if request.path == '/settings' %} active{% endif %}" href="/settings"><i class="material-icons">settings</i>Settings</a>
+        </ul>
+    </div>
+    <main class="bmd-layout-content mt-3" style="min-height: 100vh">
+        {% block content %}
+        {% endblock %}
+    </main>
+</div>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U" crossorigin="anonymous"></script>
+<script src="https://cdn.rawgit.com/FezVrasta/snackbarjs/1.1.0/dist/snackbar.min.js"></script>
+<script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js" integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9" crossorigin="anonymous"></script>
+<script>$(document).ready(function() { $('body').bootstrapMaterialDesign(); });</script>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                // Registration was successful
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+
+                window.setInterval(function() {
+                    $.get('/api/pollnotifications', function(data) {
+                        if (Array.isArray(data)) {
+                            if (data[0] != '') {
+                                registration.showNotification(data);
+                            }
+                            if (data[1]) {
+                                window.location = '/';
+                            }
+                        }
+                    })
+                }, 1000);
+            }, function(err) {
+                // registration failed :(
+                console.log('ServiceWorker registration failed: ', err);
+            });
+            // navigator.serviceWorker.ready.then(function (serviceWorkerRegistration) {
+            //     var options = {
+            //         userVisibleOnly: true,
+            //     };
+            //     console.log('ready');
+            //     serviceWorkerRegistration.pushManager.subscribe(options).then(function (pushSubscription) {
+            //         console.dir(pushSubscription);
+            //     }, function (error) {
+            //         console.dir(error);
+            //     });
+            // });
+        });
+    }
+    if (Notification.permission == "default") {
+        Notification.requestPermission();
+    }
+</script>
+{% block scripts %}
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-lg">
+                <p>Forms here</p>
+                <form action="/api/settings" method="post">
+                    <div class="form-group">
+                        <label for="heightInput" class="bmd-label-floating">Height</label>
+                        <input name="height" id="heightInput" class="form-control" value="{{ (100*user._height)|int }}">
+                        <span class="bmd-help">Enter your height in centimeters</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="weightInput" class="bmd-label-floating">Weight</label>
+                        <input name="weight" id="weightInput" class="form-control" value="{{ user._weight }}">
+                        <span class="bmd-help">Enter your weight in kilograms</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="ageInput" class="bmd-label-floating">Age</label>
+                        <input name="age" id="ageInput" class="form-control" value="{{ user._age }}">
+                        <span class="bmd-help">Enter your age in years</span>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="gender" id="genderSelect" value="male"{% if user._gender == 'male' %} checked{% endif %}>
+                            Male
+                        </label>
+                    </div>
+                    <div class="radio">
+                        <label>
+                            <input type="radio" name="gender" id="genderSelect2" value="female"{% if user._gender == 'female' %} checked{% endif %}>
+                            Female
+                        </label>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="reset">
+                            Reset BAC
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-raised">Submit</button>
+                </form>
+            </div>
+            <div class="col-lg">
+            </div>
+        </div>
+    </div>
+{% endblock %}

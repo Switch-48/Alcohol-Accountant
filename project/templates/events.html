@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-lg">
+                <h1>Past Events:</h1>
+                {% for event in events.past_events %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>Event #{{ loop.index0 + 1 }}</h5>
+                            <h6>Rating {{ event.hangover_rating }}, Peak BAC: {{ event['max bac'] }}</h6>
+                            {% for time, drink in event.event._dictionary.items() %}
+                                <p class="card-text">{{ drink[0]._name }} at {{ time.strftime('%H:%M') }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

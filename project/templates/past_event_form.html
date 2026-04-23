@@ -1,0 +1,12 @@
+<div class="card bg-success text-white">
+    <div class="card-body">
+        <h5>How's the hangover?</h5>
+        <form action="/api/submit_rating" method="POST">
+            <div class="form-group">
+                <label for="ratingInput" class="bmd-label-floating text-white">Rate your hangover</label>
+                <input name="rating" type="range" min="0" max="10" id="ratingInput" class="form-control text-white" value="5">
+            </div>
+            <button type="submit" class="btn btn-primary btn-raised">Submit</button>
+        </form>
+    </div>
+</div>
